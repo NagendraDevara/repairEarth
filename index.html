@@ -8,8 +8,8 @@
     <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="../assets/tree.png" type="image/png">
+    <link rel="stylesheet" href="./src/style.css">
+    <link rel="icon" href="./assets/tree.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
 </head>
@@ -24,7 +24,7 @@
     <div id="menu-icon" onclick="toggleForm()">
         <div class="circle-div">
 
-            <img src="../assets/menu_icon.png" alt="Menu Icon" width="100" height="100" style="margin-right: 10px;">
+            <img src="./assets/menu_icon.png" alt="Menu Icon" width="100" height="100" style="margin-right: 10px;">
             <p data-text="Upload a picture of your tree sampling">Upload a picture of your tree sampling</p>
         </div>
     </div>
@@ -177,7 +177,7 @@
 
                             // Create tree icon
                             const treeIcon = L.icon({
-                                iconUrl: '../assets/tree.png', // Use the image from assets
+                                iconUrl: './assets/tree.png', // Use the image from assets
                                 iconSize: [20, 30], // Keep original size
                                 iconAnchor: [10, 30] // Adjusted anchor to match the original width
                             });
@@ -243,7 +243,7 @@
         }
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../script.js"></script>
+    <script src="./script.js"></script>
 
 </body>
 
