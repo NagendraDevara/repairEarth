@@ -1,0 +1,70 @@
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, get, child,set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCT0ZQthoRB6UWQ4liNGzYvpQFnst-_9Gk",
+    authDomain: "repairearth-10d0a.firebaseapp.com",
+    databaseURL: "https://repairearth-10d0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "repairearth-10d0a",
+    storageBucket: "repairearth-10d0a.firebasestorage.app",
+    messagingSenderId: "78931300388",
+    appId: "1:78931300388:web:22711e196d34ba5dc088b1"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+
+  // Initialize Realtime Database
+  const database = getDatabase(app);
+
+  // Function to get data from the database
+  async function getData() {
+    const dbRef = ref(database);
+    try {
+      const snapshot = await get(child(dbRef, 'users/')); // Replace 'your/data/path' with the actual path
+      if (snapshot.exists()) {
+        const data = snapshot.val(); // Get the data as an object
+        console.log("Data retrieved:", snapshot.val());
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+            const user = data[key]; // Each user object
+            console.log(`User: ${key}`);
+            console.log(`First Name: ${user.fname}`);
+            console.log(`Username: ${user.uname}`);
+            console.log(`Image URL: ${user.imageUrl}`);
+            console.log(`Latitude: ${user.lat}`);
+            console.log(`Longitude: ${user.long}`);
+          }
+        }
+      } else {
+        console.log("No data available");
+      }
+    } catch (error) {
+      console.error("Error getting data:", error);
+    }
+  }
+
+  // Call the function to get data
+  getData();
+  async function storeData(fname, uname, imageUrl, lat, long) {
+    const dbRef = ref(database, 'users/'+fname); // Create a reference for the user
+    try {
+      await set(dbRef, {
+        fname: fname,
+        uname: uname,
+        imageUrl: imageUrl,
+        lat: lat,
+        long: long
+      });
+      console.log("Data stored successfully!");
+    } catch (error) {
+      console.error("Error storing data:", error);
+    }
+  }
+
+  // Example usage
+  storeData("kumar", "john_doe", "http://example.com/image.jpg", 12.34, 56.78);
+</script>

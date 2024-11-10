@@ -1,0 +1,9 @@
+{
+    "liveServer.settings.root": "/",
+    "liveServer.settings.https": {
+      "enable": true,
+      "cert": "C:/programming_projects/repair_geo/localhost.pem",
+      "key": "C:/programming_projects/repair_geo/localhost.key",
+      "passphrase": "admin"
+    }
+  }

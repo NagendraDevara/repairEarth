@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Example with Response</title>
+</head>
+<body>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="files[]" multiple />
+        <input type="submit" value="Upload Files" name="submit" />
+    </form>
+    <div id="map"></div>
+    <p id="data"></p>
+
+    <script>
+        const url = 'https://api.cloudinary.com/v1_1/nagendradevara/image/upload'; // Replace with your Cloudinary cloud name
+        const form = document.querySelector('form');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const files = document.querySelector('[type=file]').files;
+            const formData = new FormData();
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+                formData.append('file', file);
+                formData.append('upload_preset', 'ml_default_devara'); // Use your upload preset here
+                formData.append('folder', 'repair_earth'); // Specify the folder name here
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Change to json() to parse the response
+                })
+                .then((data) => {
+                    // Display the uploaded image URL and other data
+                    document.getElementById('data').innerHTML += <p>Uploaded: <a href="${data.secure_url}" target="_blank">${data.secure_url}</a></p>;
+                })
+                .catch((error) => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

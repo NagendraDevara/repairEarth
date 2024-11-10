@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Repair Earth Tree Dashboard 🌏</title>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="../assets/tree.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <div id="map"></div>
+    <!-- <div id="menu-icon" onclick="toggleForm()" style="display: flex; align-items: center;">
+        <img src="../assets/menu_icon.png" alt="Menu Icon" width="100" height="100" style="margin-right: 10px;">
+        <p style="flex: 1;">Upload a picture of your tree sampling</p>
+    </div> -->
+
+    <div id="menu-icon" onclick="toggleForm()">
+        <div class="circle-div">
+
+            <img src="../assets/menu_icon.png" alt="Menu Icon" width="100" height="100" style="margin-right: 10px;">
+            <p data-text="Upload a picture of your tree sampling">Upload a picture of your tree sampling</p>
+        </div>
+    </div>
+
+    <div class="upload-container">
+
+        <form method="post" id="upload-form" enctype="multipart/form-data">
+            <div class="close-icon" onclick="toggleForm()">✖</div>
+            <h4>Upload the Tree image</h4>
+            <label for="imageUpload">Upload an image (JPEG, PNG, WEBP):less than 200kb</label>
+            <!-- <input type="file" id="imageUpload" name="imageUpload" accept=".jpeg, .jpg, .png, .webp" required /> -->
+            <input type="file" class="file-input" name="files[]" accept=".jpeg, .jpg, .png, .webp" />
+            <label for="fname">If you have entered your name before, please find it in the suggestions. If this is your
+                first time, please enter your name:</label>
+            <input type="text" id="fname" list="storedNames" name="fname" placeholder="Name" required />
+            <datalist id="storedNames">
+
+            </datalist>
+            <input type="submit" value="Upload File" name="submit" />
+        </form>
+
+    </div>
+
+    <p id="data"></p>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        const url = 'https://api.cloudinary.com/v1_1/nagendradevara/image/upload';
+        const form = document.querySelector('form');
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT0ZQthoRB6UWQ4liNGzYvpQFnst-_9Gk",
+            authDomain: "repairearth-10d0a.firebaseapp.com",
+            databaseURL: "https://repairearth-10d0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "repairearth-10d0a",
+            storageBucket: "repairearth-10d0a.firebasestorage.app",
+            messagingSenderId: "78931300388",
+            appId: "1:78931300388:web:22711e196d34ba5dc088b1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        let latitude;
+        let longitude;
+        getData();
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(async function (position) {
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+
+            });
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const files = document.querySelector('[type=file]').files;
+            const fname = document.getElementById('fname').value;
+            // get lat long from javascript and not from form
+            const lat = latitude; // Use the lat from geolocation
+            const long = longitude; // Use the lng from geolocation
+            const uname = generateUsername(fname); // Generate uname from fname
+            const formData = new FormData();
+            if(files?.length ==0){
+                storeData(fname, uname, data.secure_url, lat, long);
+                return false
+            }
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+                formData.append('file', file);
+                formData.append('upload_preset', 'ml_default_devara');
+                formData.append('folder', 'repair_earth');
+                // if(file){
+                    fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        // document.getElementById('data').innerHTML += `<p>Uploaded: <a href="${data.secure_url}" target="_blank">${data.secure_url}</a></p>`;
+                        // Store user details in Firebase
+                        storeData(fname, uname, data.secure_url, lat, long);
+                    })
+                    .catch((error) => {
+                        console.error('There was a problem with the fetch operation:', error);
+                    });
+                }
+
+                // }
+
+            });
+
+
+        function generateUsername(fname) {
+            const timestamp = Date.now(); // Get current timestamp
+            const uname = fname.replace(/\s+/g, '') +'_' +timestamp; // Remove spaces and append timestamp
+            return uname;
+        }
+
+        async function storeData(fname, uname, imageUrl, lat, long) {
+            const dbRef = ref(database, 'users/' + uname); // Use uname as the key
+            try {
+                await set(dbRef, {
+                    fname: fname,
+                    uname: uname,
+                    imageUrl: imageUrl,
+                    lat: lat,
+                    long: long
+                });
+                alert("User data saved successfully.");
+
+                getData();
+            } catch (error) {
+                console.error("Error saving user data:", error);
+            }
+        }
+
+        async function getData() {
+            const dataArray = []; // Array to store fetched data
+            const dbRef = ref(database, 'users/'); // Reference to the users node
+
+            try {
+                const snapshot = await get(dbRef); // Fetch data from Firebase
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnapshot => {
+                        const data = childSnapshot.val();
+                        dataArray.push(data); // Store each user's data in the array
+                    });
+
+                    // Extract lat and long from the dataArray and feed into Leaflet
+                    dataArray.forEach(user => {
+                        const { lat, long, imageUrl, fname } = user;
+                        // log the lat long
+                        console.log({ user });
+
+                        if (lat && long) {
+
+                            map.setView([lat, long], 13);
+
+                            // Create tree icon
+                            const treeIcon = L.icon({
+                                iconUrl: '../assets/tree.png', // Use the image from assets
+                                iconSize: [20, 30], // Keep original size
+                                iconAnchor: [10, 30] // Adjusted anchor to match the original width
+                            });
+
+                            // Add a marker at user's location
+                            const marker = L.marker([lat, long]).addTo(map);
+
+                            marker.setIcon(treeIcon);
+                            const popupContent = `
+                        <div id="imagePreview">
+                            <img src="${imageUrl}"
+                                 alt="Uploaded Image"
+                                 style="width: 100%; max-width: 100%; height: auto; object-fit: contain; max-height: 80vh;">
+                                 <p>Planted by: ${fname}
+                        </div>
+                    `;
+
+                            marker.bindPopup(popupContent, {
+                                maxWidth: 600,
+                                className: 'custom-popup'
+                            });
+                        }
+                        // Add to Leaflet map here
+                        // Example: L.marker([lat, long]).addTo(map);
+                    });
+                    let fullnames = dataArray.map(item => item.fname);
+                    fullnames = Array.from(new Set(fullnames));
+
+                    loadNamesToDatalist(fullnames);
+                } else {
+                    console.log("No data available");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+        function toggleForm() {
+            const formContainer = document.getElementById('upload-form');
+            if (formContainer.style.display === 'none' || formContainer.style.display === '') {
+                formContainer.style.display = 'block'; // Show the form
+            } else {
+                formContainer.style.display = 'none'; // Hide the form
+            }
+        }
+
+        function loadNamesToDatalist(data) {
+
+            // Get the stored names from local storage
+            const names = data || [];
+
+            // Get the datalist element
+            const datalist = document.getElementById('storedNames');
+
+            // Clear existing options
+            datalist.innerHTML = '';
+
+            // Create and append options for each name
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../script.js"></script>
+
+</body>
+
+</html>
